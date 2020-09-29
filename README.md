@@ -15,46 +15,58 @@ Here I only discuss some differences regarding the Go function.
 
 ```go
     func getQuote(sym string) (string, error) {
-	sym = strings.ToUpper(sym)
-
-	url := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s", sym)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	m := make(map[string]float32)
-	json.Unmarshal(body, &m)
-
-	url1 := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
-	resp1, err1 := http.Get(url1)
-	if err1 != nil {
-		return "", err1
-	}
-
-	defer resp1.Body.Close()
-	body1, err1 := ioutil.ReadAll(resp1.Body)
-	m1 := make(map[string]string)
-	json.Unmarshal(body1, &m1)
-
-	var s string 
-	
-	if len(m) == 1 {
-		s = "_" + sym + " is not a valid trading name_"
-	} else {
-		s = "*" + m1["name"] + " (" + sym + ") " + " Stock Price* \n" +
-			"_current_: $" + fmt.Sprintf("%.2f", m["c"]) + "\n" +
-			"_high_: $" + fmt.Sprintf("%.2f", m["h"]) + "\n" +
-			"_low_: $" + fmt.Sprintf("%.2f", m["l"]) + "\n" +
-			"_open_: $" + fmt.Sprintf("%.2f", m["o"]) + "\n" +
-			"_previous close_: $" + fmt.Sprintf("%.2f", m["pc"]) + "\n" +
-			"_timestamp_: " + time.Now().UTC().String()
-	}
-
-	return s, nil
-}
+    	sym = strings.ToUpper(sym)
+    
+    	fhUrl := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s", sym)
+    	resp, err := http.Get(fhUrl)
+    	if err != nil {
+    		return "", err
+    	}
+    
+    	defer func(){
+    		_ = resp.Body.Close()
+    	}()
+    
+    	body, err := ioutil.ReadAll(resp.Body)
+    	m := make(map[string]float32)
+    	err = json.Unmarshal(body, &m)
+    	if err != nil {
+    		return "", err
+    	}
+    
+    	url1 := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
+    	resp1, err1 := http.Get(url1)
+    	if err1 != nil {
+    		return "", err1
+    	}
+    
+    	defer func(){
+    		_ = resp1.Body.Close()
+    	}()
+    
+    	body1, err1 := ioutil.ReadAll(resp1.Body)
+    	m1 := make(map[string]string)
+    	err = json.Unmarshal(body1, &m1)
+    	if err != nil {
+    		return "", err
+    	}
+    
+    	var s string
+    
+    	if len(m) == 1 {
+    		s = "_" + sym + " is not a valid trading name_"
+    	} else {
+    		s = "*" + m1["name"] + " (" + sym + ") " + " Stock Price* \n" +
+    			"_current_: $" + fmt.Sprintf("%.2f", m["c"]) + "\n" +
+    			"_high_: $" + fmt.Sprintf("%.2f", m["h"]) + "\n" +
+    			"_low_: $" + fmt.Sprintf("%.2f", m["l"]) + "\n" +
+    			"_open_: $" + fmt.Sprintf("%.2f", m["o"]) + "\n" +
+    			"_previous close_: $" + fmt.Sprintf("%.2f", m["pc"]) + "\n" +
+    			"_timestamp_: " + time.Now().UTC().String()
+    	}
+    
+    	return s, nil
+    }
 ```
   
   I use `http://finnhub.io API` this time for getting stock value of a company by its ticker symbol. You can find
