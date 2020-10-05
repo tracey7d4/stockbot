@@ -77,7 +77,7 @@ func getQuote(sym string) (string, error) {
 		return "", err
 	}
 
-	defer func(){
+	defer func() {
 		_ = resp.Body.Close()
 	}()
 
@@ -88,19 +88,19 @@ func getQuote(sym string) (string, error) {
 		return "", err
 	}
 
-	url1 := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
-	resp1, err1 := http.Get(url1)
-	if err1 != nil {
-		return "", err1
+	fhUrlForName := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
+	resp, err = http.Get(fhUrlForName)
+	if err != nil {
+		return "", err
 	}
 
-	defer func(){
-		_ = resp1.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
 	}()
 
-	body1, err1 := ioutil.ReadAll(resp1.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	m1 := make(map[string]string)
-	err = json.Unmarshal(body1, &m1)
+	err = json.Unmarshal(body, &m1)
 	if err != nil {
 		return "", err
 	}

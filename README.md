@@ -1,17 +1,16 @@
-# Simple Slack bot in Go using event API - II
+# Simple Slack bot in Go using event API
 ## Stock bot
 
-We will discuss about `stockbot` that returns stock value of a given company at current time.
+![stockBot image](docs/image/stockbot.png) 
 
-![stockBot image](docs/image/stockbot.png)  
-
- For one who comes to this repository first, I have another repository call [`weatherbot`](https://github.com/Tracey7d4/weatherbot) 
- that step by step describe how to build a `weatherbot` that return weather condition of a given city.
-Here I only discuss some differences regarding the Go function.
-
-   Similar to `weatherbot`,   we now create Slack bot named `stockbot` and our Go function named `AppStockMentionHandler`.
-  Most of steps in this function are similar to the ones in previous function for `weatherbot`,
-   the only difference is that we use `getQuote` function here  instead of `getWeather` function. 
+In this application, we will discuss about `stockbot` that returns stock prices of a company. 
+ The architecture is as follows.
+ 
+ ![Architecture](docs/image/diagram.png) 
+ 
+  For one who comes to this repository first, I have another repository call [`weatherbot`](https://github.com/Tracey7d4/weatherbot) in which I have described step by step how to build a `weatherbot` for querying weather conditon of a location. Most of the steps of implementation for two bots are similar, including building a Slack bot user, subscribing to app mentioned event, creating a Go function which is a HTTP handler. So please refer to that application for more details. In this application, I only discuss the difference in Go function. In particular, we will have a look at `getStock()`, which is used to make a call out to third-party API, receive the response, extract and format the information.
+   
+ The `getQuote()` is as follows.
 
 ```go
     func getQuote(sym string) (string, error) {
@@ -34,19 +33,19 @@ Here I only discuss some differences regarding the Go function.
     		return "", err
     	}
     
-    	url1 := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
-    	resp1, err1 := http.Get(url1)
-    	if err1 != nil {
-    		return "", err1
+    	fhUrlForName := fmt.Sprintf("https://finnhub.io/api/v1/stock/profile2?symbol=%s", sym)
+    	resp, err = http.Get(fhUrlForName)
+    	if err != nil {
+    		return "", err
     	}
     
     	defer func(){
-    		_ = resp1.Body.Close()
+    		_ = resp.Body.Close()
     	}()
     
-    	body1, err1 := ioutil.ReadAll(resp1.Body)
+    	body, err = ioutil.ReadAll(resp.Body)
     	m1 := make(map[string]string)
-    	err = json.Unmarshal(body1, &m1)
+    	err = json.Unmarshal(body, &m1)
     	if err != nil {
     		return "", err
     	}
@@ -69,11 +68,10 @@ Here I only discuss some differences regarding the Go function.
     }
 ```
   
-  I use `http://finnhub.io API` this time for getting stock value of a company by its ticker symbol. You can find
-  its API documentation in [here](https://finnhub.io/docs/api).
+  I use `http://finnhub.io API` this time for getting stock value of a company by its ticker symbol. You can find its API documentation in [here](https://finnhub.io/docs/api). 
   
-  In case you want to display the company's trading name along with its ticker symbol,
-  you can extract this information from following URL (`url1` variable in the code)
+  I also want to display the company trading name along with its ticker symbol, so I make another call 
+  for getting the company name.
   
    ```shell script
    https://finnhub.io/api/v1/stock/profile2?symbol=<ticker symbol>
